@@ -1,8 +1,7 @@
 /* global describe, before, it */
 
 const FiddleClient = require('./fiddle-client');
-const MochaTest = require('mocha/lib/test');
-const MochaSuite = require('mocha/lib/suite');
+const Mocha = require('mocha');
 const AssertionError = require('assertion-error');
 
 module.exports = function (name, data) {
@@ -34,6 +33,7 @@ module.exports = function (name, data) {
 
 				// Execute the fiddle and wait for the test results to be available
 				before(async () => {
+          this.tests = []; // Remove the sacrificial test from the outer suite
 					const result = await FiddleClient.execute({ ...fiddle, requests: s.requests}, { waitFor: 'tests' });
 
 					// Within the results, create a test case in mocha for each test case
@@ -42,18 +42,17 @@ module.exports = function (name, data) {
 						if (!req.tests) throw new Error('No test results provided');
 
 						// Organise each request into a suite (use the request line as the suite name)
-						const suite = new MochaSuite(req.req.split('\n')[0]);
+						const suite = new Mocha.Suite(req.req.split('\n')[0]);
 						for (const t of req.tests) {
 
 							// Create an individual test for each test that applies to this request
-							suite.addTest(new MochaTest(t.testExpr, function() {
+							suite.addTest(new Mocha.Test(t.testExpr, function() {
 								if (!t.pass) {
 									const e = new AssertionError(t.detail , { actual: t.actual, expected: t.expected, showDiff: true });
 									throw e;
 								}
 							}));
 						}
-						this.tests = []; // Remove the sacrificial test from the outer suite
 						this.addSuite(suite);
 					}
 				});
