@@ -3,7 +3,7 @@
 	"private": true,
   "version": "1.0.0",
   "scripts": {
-    "test": "mocha test.js --exit"
+    "test": "mocha src/test.js --exit"
   },
   "devDependencies": {
     "assertion-error": "^1.1.0",
