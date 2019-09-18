@@ -1,0 +1,17 @@
+{
+	"parserOptions": {
+		"ecmaVersion": 2018,
+		"impliedStrict": true,
+		"ecmaFeatures": {
+			"experimentalObjectRestSpread": true
+		}
+	},
+	"env": {
+		"node": true,
+		"es6": true
+	},
+	"extends": "eslint:recommended",
+	"rules": {
+		"semi": "error"
+	}
+}

@@ -1,0 +1,14 @@
+{
+	"name": "demo-fiddle-ci",
+	"private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "test": "mocha test.js --exit"
+  },
+  "devDependencies": {
+    "assertion-error": "^1.1.0",
+    "mocha": "^6.2.0",
+    "node-fetch": "^2.6.0"
+  },
+  "license": "MIT"
+}
