@@ -2,7 +2,7 @@
 
 This demo shows how to test Fastly services using [Mocha](https://mochajs.org) and [npm](https://npmjs.com/).
 
-![screenshot.png]
+![Screenshot](screenshot.png)
 
 The solution comprises three parts:
 
