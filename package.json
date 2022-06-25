@@ -8,7 +8,7 @@
   "devDependencies": {
     "assertion-error": "^1.1.0",
     "mocha": "^6.2.0",
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.7"
   },
   "license": "MIT"
 }
