@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
 
-const base = "https://fiddle.fastlydemo.net";
+const base = "https://fiddle.fastly.dev";
 
 /**
  * Get a fiddle
