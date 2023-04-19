@@ -14,7 +14,7 @@ exports.get = async (fiddleID) => {
 		method: 'GET',
 		headers: { 'Accept': 'application/json' }
 	});
-	//console.log(url, respData);
+	console.log(url, respData);
 	return respData.fiddle;
 };
 
@@ -33,13 +33,13 @@ exports.publish = async (fiddle) => {
 	// Create the fiddle and get an identifier for it
 	const url = fiddle.id ? base + '/fiddle/' + fiddle.id  : base + '/fiddle';
 	const method = fiddle.id ? 'PUT' : 'POST';
-	//console.log('- Publishing VCL to fiddle', url, method);
+	console.log('- Publishing VCL to fiddle', url, method);
 	const respData = await fetchJSON(url, {
 		method,
 		headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
 		body: JSON.stringify(fiddle)
 	});
-	//console.log(url, respData);
+	console.log(url, respData);
 	return respData.fiddle;
 };
 
@@ -99,7 +99,7 @@ exports.execute = async (fiddleOrID, options) => {
 	}
 
 	// Execute it - this returns an execution session ID
-	//console.log('- Executing the fiddle ' + fiddleID);
+	console.log('- Executing the fiddle ' + fiddleID);
 	const execSession = await fetchJSON(base + '/fiddle/' + fiddleID + '/execute?cacheID=' + options.cacheID, {
 		method: 'POST',
 		headers: { 'Accept': 'application/json' }
@@ -107,7 +107,7 @@ exports.execute = async (fiddleOrID, options) => {
 
 	// Subscribe to the execution session and await the response
 	const streamUrl = base + '/results/' + execSession.sessionID + '/stream';
-	//console.log('- Subscribing to result stream ' + streamUrl);
+	console.log('- Subscribing to result stream ' + streamUrl);
 	const sessionResp = await fetch(streamUrl, { headers: { accept: 'text/event-stream' } });
 
 	const resultReport = await new Promise(resolve => {
@@ -145,9 +145,9 @@ exports.execute = async (fiddleOrID, options) => {
 					;
 					dataBuffer = dataBuffer.slice(eventDelimPos+2);
 					if (event.event === 'waitingForSync') {
-						//console.log('- Syncing config to edge...');
+						console.log('- Syncing config to edge...');
 					} else if (event.event === 'updateResult') {
-						//console.log('- Result update...');
+						console.log('- Result update...');
 						latestResult = JSON.parse(event.data);
             finalise();
 					}
