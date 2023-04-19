@@ -9,7 +9,7 @@ module.exports = function (name, data) {
 	// Create a testing scope for each Fastly service under test
 	describe(name, function () {
 
-		this.timeout(60000);
+		this.timeout(90000);
 
 		let fiddle;
 

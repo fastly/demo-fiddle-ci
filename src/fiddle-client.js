@@ -84,7 +84,7 @@ exports.execute = async (fiddleOrID, options) => {
 		resultCondition: null,
 		cacheID: Math.round(Math.random() * 100000),
 		waitFor: [],
-    maxWait: 25000,
+    maxWait: 60000,
     minWait: 2000,
 		...(options || {})
 	};
