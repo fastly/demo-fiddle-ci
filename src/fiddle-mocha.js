@@ -17,7 +17,6 @@ module.exports = function (name, data) {
 		// This will sync the VCL to the edge network, which takes 10-20 seconds
 		before(async () => {
 			fiddle = await FiddleClient.publish(data.spec);
-			await FiddleClient.execute(fiddle); // Make sure the VCL is pushed to the edge
 		});
 
 		// Distinct features of the service logic will likely be tested with different
@@ -34,7 +33,7 @@ module.exports = function (name, data) {
 				// Execute the fiddle and wait for the test results to be available
 				before(async () => {
           this.tests = []; // Remove the sacrificial test from the outer suite
-					const result = await FiddleClient.execute({ ...fiddle, requests: s.requests}, { waitFor: 'tests' });
+					const result = await FiddleClient.execute({ ...fiddle, requests: s.requests}, { debug: data.debug, waitFor: 'tests' });
 
 					// Within the results, create a test case in mocha for each test case
 					// that has been executed remotely, so we can report the result

@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const EventSource = require('eventsource');
 
 const base = "https://fiddle.fastly.dev";
 
@@ -14,7 +15,6 @@ exports.get = async (fiddleID) => {
 		method: 'GET',
 		headers: { 'Accept': 'application/json' }
 	});
-	console.log(url, respData);
 	return respData.fiddle;
 };
 
@@ -33,13 +33,11 @@ exports.publish = async (fiddle) => {
 	// Create the fiddle and get an identifier for it
 	const url = fiddle.id ? base + '/fiddle/' + fiddle.id  : base + '/fiddle';
 	const method = fiddle.id ? 'PUT' : 'POST';
-	console.log('- Publishing VCL to fiddle', url, method);
 	const respData = await fetchJSON(url, {
 		method,
 		headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
 		body: JSON.stringify(fiddle)
 	});
-	console.log(url, respData);
 	return respData.fiddle;
 };
 
@@ -77,8 +75,10 @@ exports.execute = async (fiddleOrID, options) => {
 	// If the param is a full fiddle, publish it first
 	const fiddleID = (typeof fiddleOrID === 'object') ? (await exports.publish(fiddleOrID)).id : fiddleOrID;
 
-	// Get the full normalised fiddle
+	// Get the full normalized fiddle
+	if (options.debug) console.log('- Fetching fiddle ' + fiddleID);
 	const fiddle = await exports.get(fiddleID);
+	if (options.debug) console.log(fiddle)
 
 	options = {
 		resultCondition: null,
@@ -99,7 +99,7 @@ exports.execute = async (fiddleOrID, options) => {
 	}
 
 	// Execute it - this returns an execution session ID
-	console.log('- Executing the fiddle ' + fiddleID);
+	if (options.debug) console.log('- Executing the fiddle ' + fiddleID);
 	const execSession = await fetchJSON(base + '/fiddle/' + fiddleID + '/execute?cacheID=' + options.cacheID, {
 		method: 'POST',
 		headers: { 'Accept': 'application/json' }
@@ -107,52 +107,34 @@ exports.execute = async (fiddleOrID, options) => {
 
 	// Subscribe to the execution session and await the response
 	const streamUrl = base + '/results/' + execSession.sessionID + '/stream';
-	console.log('- Subscribing to result stream ' + streamUrl);
-	const sessionResp = await fetch(streamUrl, { headers: { accept: 'text/event-stream' } });
+	if (options.debug) console.log('- Subscribing to result stream ' + streamUrl);
+	const stream = new EventSource(streamUrl);
 
 	const resultReport = await new Promise(resolve => {
     const startTime = Date.now();
-		let dataBuffer = Buffer.from('');
 		let latestResult = null;
     let maxTimer, minTimer;
 
-		function finalise() {
+		function tryFinalize() {
       const elapsed = Date.now() - startTime;
       if (elapsed > options.minWait && latestResult && (resultConditions.every(fn => fn(latestResult)) || elapsed > options.maxWait)) {
-        sessionResp.body.removeAllListeners('data');
-        clearTimeout(minTimer);
+				stream.close();
+				clearTimeout(minTimer);
         clearTimeout(maxTimer);
         resolve(latestResult);
       }
 		}
-    minTimer = setTimeout(finalise, options.minWait);
-    maxTimer = setTimeout(finalise, options.maxWait);
+    minTimer = setTimeout(tryFinalize, options.minWait);
+    maxTimer = setTimeout(tryFinalize, options.maxWait);
 
-		sessionResp.body.on('data', chunk => {
-			dataBuffer = Buffer.concat([dataBuffer, chunk]);
-			let eventDelimPos = -1;
-			do {
-				eventDelimPos = dataBuffer.indexOf('\n\n', 0, 'utf-8');
-				if (eventDelimPos !== -1) {
-					const event = dataBuffer
-						.slice(0, eventDelimPos)
-						.toString('utf-8')
-						.split(/\n+/)
-						.reduce((out, line) => {
-							const m = line.match(/^([^:]+):\s*(.+?)$/);
-							return m ? Object.assign({}, out, {[m[1]]: m[2]}) : out;
-						}, {})
-					;
-					dataBuffer = dataBuffer.slice(eventDelimPos+2);
-					if (event.event === 'waitingForSync') {
-						console.log('- Syncing config to edge...');
-					} else if (event.event === 'updateResult') {
-						console.log('- Result update...');
-						latestResult = JSON.parse(event.data);
-            finalise();
-					}
-				}
-			} while (eventDelimPos !== -1);
+		stream.addEventListener('waitingForSync', evt => {
+			const debug = JSON.parse(evt.data);
+			if (options.debug) console.log(`- Syncing config to ${debug.serviceName} (${debug.retryCount}:${debug.status})...`);
+		});
+		stream.addEventListener('updateResult', evt => {
+			if (options.debug) console.log('- Result update...');
+			latestResult = JSON.parse(evt.data);
+      tryFinalize();
 		});
 	});
 	return resultReport;

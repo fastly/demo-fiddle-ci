@@ -1,14 +1,17 @@
 {
 	"name": "demo-fiddle-ci",
 	"private": true,
-  "version": "1.0.0",
-  "scripts": {
-    "test": "mocha src/test.js --exit"
-  },
-  "devDependencies": {
-    "assertion-error": "^1.1.0",
-    "mocha": "^6.2.0",
-    "node-fetch": "^2.6.0"
-  },
-  "license": "MIT"
+	"version": "1.0.0",
+	"scripts": {
+		"test": "mocha src/test.js --exit"
+	},
+	"devDependencies": {
+		"assertion-error": "^1.1.0",
+		"mocha": "^10.2.0",
+		"node-fetch": "^2.6.0"
+	},
+	"license": "MIT",
+	"dependencies": {
+		"eventsource": "^2.0.2"
+	}
 }

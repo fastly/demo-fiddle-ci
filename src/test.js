@@ -1,6 +1,7 @@
 const testService = require('./fiddle-mocha');
 
 testService('Service: example.com', {
+	debug: false,
 	spec: {
 		origins: ["https://httpbin.org"],
 		vcl: {
