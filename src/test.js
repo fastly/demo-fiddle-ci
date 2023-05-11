@@ -5,8 +5,18 @@ testService('Service: example.com', {
 	spec: {
 		origins: ["https://httpbin.org"],
 		vcl: {
-			recv: `set req.url = querystring.sort(req.url);\nif (req.url.path == "/robots.txt") {\nerror 601;\n}`,
-			error: `if (obj.status == 601) {\nset obj.status = 200;\nset obj.response = "OK";synthetic "User-agent: BadBot" LF "Disallow: /";\nreturn(deliver);\n}`
+			recv: `
+				set req.url = querystring.sort(req.url);
+				if (req.url.path == "/robots.txt") {
+					error 601;
+				}`,
+			error: `
+				if (obj.status == 601) {
+					set obj.status = 200;
+					set obj.response = "OK";
+					synthetic "User-agent: BadBot" LF "Disallow: /";
+					return(deliver);
+			}`
 		}
 	},
 	scenarios: [
@@ -63,5 +73,3 @@ testService('Service: example.com', {
 		}
 	]
 });
-
-
