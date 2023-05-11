@@ -1,5 +1,6 @@
 /* global describe, before, it */
 
+const _ = require("underscore");
 const FiddleClient = require('./fiddle-client');
 const Mocha = require('mocha');
 const AssertionError = require('assertion-error');
@@ -8,15 +9,16 @@ module.exports = function (name, data) {
 
 	// Create a testing scope for each Fastly service under test
 	describe(name, function () {
-
-		this.timeout(90000);
-
+		const timeout = data.timeout ? data.timeout : 90000;
+		this.timeout(timeout);
+	
 		let fiddle;
 
 		// Push the VCL for this service and get a fiddle ID
 		// This will sync the VCL to the edge network, which takes 10-20 seconds
 		before(async () => {
-			fiddle = await FiddleClient.publish(data.spec);
+			const spec = _.isFunction(data.spec) ? await data.spec() : data.spec;
+			fiddle = await FiddleClient.publish(spec);
 		});
 
 		// Distinct features of the service logic will likely be tested with different
@@ -32,7 +34,7 @@ module.exports = function (name, data) {
 
 				// Execute the fiddle and wait for the test results to be available
 				before(async () => {
-          this.tests = []; // Remove the sacrificial test from the outer suite
+          			this.tests = []; // Remove the sacrificial test from the outer suite
 					const result = await FiddleClient.execute({ ...fiddle, requests: s.requests}, { debug: data.debug, waitFor: 'tests' });
 
 					// Within the results, create a test case in mocha for each test case
